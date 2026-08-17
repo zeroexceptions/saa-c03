@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+BUCKET_NAME="$1"
+LOCAL_DIR="$2"
+
+if [ -z "$BUCKET_NAME" ] || [ -z "$LOCAL_DIR" ]; then
+  echo "Error: please provide a bucket name and a local directory. Usage: ./sync <bucket-name> <local-dir>"
+  exit 1
+fi
+
+aws s3 sync "$LOCAL_DIR" "s3://$BUCKET_NAME"

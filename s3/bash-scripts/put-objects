@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+BUCKET_NAME="$1"
+FILE_PATH="$2"
+
+if [ -z "$BUCKET_NAME" ] || [ -z "$FILE_PATH" ]; then
+  echo "Error: please provide a bucket name and a file path. Usage: ./put-objects <bucket-name> <file-path>"
+  exit 1
+fi
+
+KEY=$(basename "$FILE_PATH")
+
+aws s3api put-object --bucket "$BUCKET_NAME" --key "$KEY" --body "$FILE_PATH"

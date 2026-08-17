@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+BUCKET_NAME="$1"
+
+if [ -z "$BUCKET_NAME" ]; then
+  echo "Error: please provide a bucket name. Usage: ./delete-bucket <bucket-name>"
+  exit 1
+fi
+
+aws s3api delete-bucket --bucket "$BUCKET_NAME"
