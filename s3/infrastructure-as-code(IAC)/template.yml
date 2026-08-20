@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SAA-C03 practice stack - creates a single S3 bucket
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: dev03-aws-crs-practice-bucket
