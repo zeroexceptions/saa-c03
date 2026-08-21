@@ -1,0 +1,180 @@
+S3 CHEAT SHEET
+==============
+
+General: S3 is a globally available service (you access it via a global
+namespace), but every bucket physically lives in one region you choose at
+creation time. Data never leaves that region unless you set up replication.
+
+
+1. S3 BUCKET NAMING RULES
+--------------------------
+- Bucket names are globally unique across ALL AWS accounts in the same
+  partition (aws / aws-cn / aws-us-gov are separate namespaces) - not just
+  unique within your account.
+- 3-63 characters long.
+- Lowercase letters, numbers, hyphens (-) and periods (.) only. No uppercase,
+  no underscores, no spaces.
+- Must start and end with a letter or number (not a hyphen or period).
+- No two adjacent periods (e.g. "my..bucket" invalid).
+- Cannot be formatted like an IP address (e.g. 192.168.5.4).
+- Cannot start with reserved prefixes: "xn--", "sthree-", "amzn-s3-demo-".
+- Cannot end with reserved suffixes: "-s3alias" (reserved for access point
+  aliases), "--ol-s3" (reserved for Object Lambda access points).
+- Once created, a bucket name is permanent - you cannot rename a bucket,
+  only delete it and create a new one (and the name isn't instantly
+  reusable elsewhere after deletion).
+- Avoid periods in the name if you plan to use virtual-hosted-style HTTPS
+  access with the default S3 wildcard cert, or plan to put CloudFront in
+  front of it - SSL wildcard cert matching breaks on dots in the hostname.
+- Also for S3 transfer accelerate, buckets can't have dot in their name. 
+
+
+2. S3 BUCKET RESTRICTIONS AND LIMITATIONS
+------------------------------------------
+- Default quota: 100 buckets per account; can request a Service Quota
+  increase up to 1,000.
+- No limit on number of objects in a bucket or total storage - effectively
+  unlimited.
+- Max single object size: 5 TB.
+- Max size for a single PUT (one API call): 5 GB. Anything larger MUST use
+  multipart upload (AWS recommends multipart for anything over ~100 MB for
+  reliability/parallelism, and it becomes mandatory above 5 GB).
+- Multipart upload: min part size 5 MB (except the last part), max 10,000
+  parts.
+- No true nested buckets - "sub-buckets" don't exist, only key prefixes.
+- Bucket policies are capped at 20 KB.
+- Up to 10 tags per object.
+- Request rate: S3 scales automatically per prefix - no need to
+  "randomize" key prefixes for performance anymore (old pre-2018 advice).
+  Baseline supported per prefix: 3,500 PUT/COPY/POST/DELETE and 5,500
+  GET/HEAD requests per second.
+
+
+3. S3 BUCKET TYPES
+--------------------
+- General purpose bucket (default, what you get normally):
+  - Region-scoped, flat key-value namespace, unlimited storage.
+  - Backs all the standard storage classes (Standard, Intelligent-Tiering,
+    Standard-IA, One Zone-IA, Glacier Instant Retrieval, Glacier Flexible
+    Retrieval, Glacier Deep Archive).
+- Directory bucket (S3 Express One Zone):
+  - Purpose-built for low-latency, high-throughput workloads.
+  - Lives in a SINGLE Availability Zone (you pick the AZ) - trades
+    multi-AZ durability for speed (single-digit millisecond latency).
+  - Has a real hierarchical namespace (actual directories), not simulated
+    prefixes like general purpose buckets.
+  - Naming convention is different: bucket-base-name--azid--x-s3.
+  - Only usable with the S3 Express One Zone storage class.
+- Table bucket (S3 Tables, newer addition):
+  - Purpose-built to store tabular data as Apache Iceberg tables.
+  - Aimed at analytics workloads (query engines like Athena, EMR, etc.).
+
+
+4. S3 BUCKET FOLDERS
+-----------------------
+- S3 is flat object storage - there is no real directory tree in a general
+  purpose bucket. A "folder" is just a naming convention: the object's Key
+  contains "/" characters, e.g. photos/2024/trip/pic.jpg is ONE object
+  whose whole key is that string.
+- The console fakes folder creation by uploading a zero-byte object whose
+  key ends in "/" (e.g. photos/2024/) - this is just a UI convenience
+  marker, not something S3 requires.
+- Listing APIs (ListObjectsV2) emulate directory browsing using the
+  "prefix" and "delimiter" parameters - matches under a prefix up to the
+  next delimiter get rolled up into "CommonPrefixes" (i.e. the folders you
+  see in the console).
+- Deleting a "folder" in the console really means deleting every object
+  that shares that key prefix.
+- Exception: Directory buckets (S3 Express One Zone) DO have a genuine
+  hierarchical namespace, unlike general purpose buckets.
+
+
+5. BUCKET VERSIONING
+------------------------
+- Off by default. Three states, and it's a one-way door in one direction:
+  Unversioned -> Enabled -> Suspended (you can go back and forth between
+  Enabled and Suspended, but never back to Unversioned once turned on).
+- When enabled: every PUT to the same key creates a new object version
+  with a unique Version ID. Old versions are kept, not overwritten.
+- DELETE without a version ID doesn't actually erase data - it inserts a
+  "delete marker" (a new version) so the object just appears gone in
+  normal listings.
+- DELETE with an explicit version ID permanently removes that specific
+  version.
+- Suspending versioning: new objects get a version ID of "null"; existing
+  versions already stored are untouched and remain retrievable.
+- MFA Delete: optional extra protection requiring the root account's MFA
+  code to permanently delete a version or to disable/suspend versioning
+  itself. Can only be enabled/disabled via the CLI by the root user.
+- Cost implication: every version stored counts toward billable storage -
+  pair versioning with lifecycle rules to expire/transition noncurrent
+  versions (e.g. to Glacier, or expire after N days).
+- Cross-Region Replication (CRR) and Same-Region Replication (SRR) both
+  REQUIRE versioning enabled on the source bucket (and destination).
+- CDK: `versioned: true` on the s3.Bucket construct (as seen in
+  ../infrastructure-as-code(IAC)/cdk-app/lib/cdk-app-stack.js before it
+  was removed for this practice bucket).
+
+
+6. BUCKET ENCRYPTION
+------------------------
+Server-side encryption (SSE) options - AWS encrypts/decrypts for you:
+- SSE-S3: Amazon S3-managed keys, AES-256. AWS handles everything. This is
+  now the ACCOUNT-WIDE DEFAULT for every new object since Jan 2023, even
+  if you specify nothing.
+- SSE-KMS: uses an AWS KMS key (either the AWS-managed "aws/s3" key or your
+  own customer-managed key). Gives you a CloudTrail audit trail of every
+  key usage and key policy-based access control. Downside: KMS has its own
+  API request quota, so very high request-rate workloads can get
+  throttled - mitigate with "S3 Bucket Keys" to cut down on KMS API calls.
+- DSSE-KMS: dual-layer SSE with KMS - encrypts data twice, for extra strict
+  compliance needs (e.g. FIPS-type requirements).
+- SSE-C: customer-provided key - YOU supply the encryption key on every
+  request (over HTTPS only); S3 uses it once and discards it, never
+  storing it. You must resupply the exact same key on every GET too.
+- Client-side encryption: you encrypt the data yourself before it ever
+  reaches S3. S3 just stores opaque bytes; full control, but you own key
+  management and never get server-side decryption help.
+- Encryption in transit vs at rest are separate concerns: at-rest is the
+  above; in-transit is just TLS/HTTPS. You can force HTTPS-only access
+  with a bucket policy condition on `aws:SecureTransport`.
+- You can also force a specific SSE mode with a bucket policy that denies
+  PutObject requests missing the right `x-amz-server-side-encryption`
+  header.
+- Encryption is decided per object - different objects in the same bucket
+  can use different SSE modes.
+
+
+7. STATIC WEBSITE HOSTING
+----------------------------
+- Enabled via a bucket property: turn on "Static website hosting" and set
+  an index document (e.g. index.html) and optionally an error document
+  (e.g. error.html).
+- The static website endpoint has NO concept of IAM auth - visitors are
+  anonymous, so the bucket needs "Block Public Access" turned off (at
+  least partially) plus a bucket policy granting `s3:GetObject` to
+  everyone (Principal: "*") for the site to actually be reachable.
+- Two different endpoint styles for the same bucket:
+  - REST/API endpoint: bucket-name.s3.amazonaws.com (returns raw XML API
+    responses, not a rendered site).
+  - Website endpoint: bucket-name.s3-website-<region>.amazonaws.com (exact
+    hostname format varies slightly by region/partition) - THIS is the one
+    that serves index/error documents like a real website.
+- The S3 website endpoint only serves HTTP, never HTTPS, and only your
+  bucket's default region domain - put CloudFront in front if you need
+  HTTPS and/or a custom domain with a certificate.
+- Static hosting means static content only - HTML/CSS/JS/images. No
+  server-side code execution (no PHP/Node/etc running on S3). Dynamic
+  behavior has to come from client-side JS calling out to something else
+  (API Gateway + Lambda, etc.).
+- Supports redirect rules - e.g. redirect the whole bucket to another
+  domain, or per-request routing rules (handy for apex-domain -> "www"
+  redirects).
+- Custom domain: point a Route 53 alias record at the S3 website endpoint.
+  Important gotcha - the BUCKET NAME must exactly match the domain name
+  you're serving (e.g. bucket "example.com" for domain example.com).
+- If your site's JS/assets are fetched cross-origin, you'll also need a
+  CORS configuration on the bucket.
+- On an error, S3 returns your custom error document as the response body,
+  but still keeps the real HTTP status code that occurred (403, 404, etc.)
+  - it doesn't silently turn errors into 200s.
