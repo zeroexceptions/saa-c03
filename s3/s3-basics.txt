@@ -178,3 +178,22 @@ Server-side encryption (SSE) options - AWS encrypts/decrypts for you:
 - On an error, S3 returns your custom error document as the response body,
   but still keeps the real HTTP status code that occurred (403, 404, etc.)
   - it doesn't silently turn errors into 200s.
+
+
+s3 object lock
+
+aws s3,
+aws s3api
+aws s3control
+aws s3outposts
+
+
+https://zeroexceptions.s3.us-east-1.amazonaws.com/docs/all/myfiles/s3.txt
+
+https://zeroexceptions.s3.us-east-1.amazonaws.com/ (s3 endpoint)
+
+
+docs/all/myfiles/s3.txt (object key)
+docs/all/myfiles/ (object prefix)
+s3.txt (object name)
+
