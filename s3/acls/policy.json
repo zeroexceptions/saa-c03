@@ -1,0 +1,24 @@
+{
+  "Grants": [
+    {
+      "Grantee": {
+        "DisplayName": "haider-admin",
+        "ID": "canonicat ID here",
+        "Type": "CanonicalUser"
+      },
+      "Permission": "FULL_CONTROL"
+    },
+    {
+      "Grantee": {
+        "DisplayName": "abdul_contractor",
+        "ID": "canonical ID here",
+        "Type": "CanonicalUser"
+      },
+      "Permission": "FULL_CONTROL"
+    }
+  ],
+  "Owner": {
+    "DisplayName": "haider-admin",
+    "ID": "canonicat ID here"
+  }
+}
