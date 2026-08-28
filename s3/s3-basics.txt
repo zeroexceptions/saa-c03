@@ -1,3 +1,108 @@
+=========================
+Bucket policies
+ACLs
+AWS private link for amazon s3
+CORS for static website hosting
+Block public access
+IAM analyzer for s3
+Internetwork traffic privacy
+object ownership
+access points
+access grants
+versioning
+mfa delete
+object tags
+In-transit encryption
+server side encryptionc
+client side encryption
+compliance validation for amazon s3
+infrastructure security
+============================
+
+s3 object lock
+
+aws s3,
+aws s3api
+aws s3control
+aws s3outposts
+
+=========================
+
+
+
+
+
+
+
+
+========================================
+AWS S3 - BUCKET vs OBJECT
+========================================
+
+S3 BUCKET
+---------
+- A bucket is a container/folder-like resource that holds objects (files).
+- Think of it like a top-level directory in a global filesystem.
+- Buckets have properties: region, versioning, encryption, policies, logging, lifecycle rules, etc.
+- You must create a bucket before you can upload any object into it.
+- Default limit: 100 buckets per account (can request increase up to 1000).
+- Naming rules:
+    - 3-63 characters long
+    - lowercase letters, numbers, hyphens only (no uppercase, no underscores)
+    - must start/end with a letter or number
+    - cannot look like an IP address (e.g. 192.168.1.1)
+
+S3 OBJECT
+---------
+- An object is the actual file/data stored inside a bucket (e.g. image, video, document).
+- Each object = data + metadata + a unique key (its "path/filename" within the bucket).
+- Object size range: 0 bytes up to 5TB.
+- Objects larger than 5GB must be uploaded using Multipart Upload.
+- Every object has a version ID if versioning is enabled on the bucket.
+- Objects are identified by: Bucket name + Key (full path) + Version ID (optional).
+
+Key difference:
+  Bucket = the container (like a top-level folder)
+  Object = the actual file stored inside that container
+
+========================================
+WHY BUCKET NAMES MUST BE "UNIVERSALLY UNIQUE"
+========================================
+- S3 bucket names are unique across ALL AWS accounts globally, not just within your account.
+- This is because S3 uses a global namespace: every bucket gets a DNS-compatible endpoint like:
+      https://<bucket-name>.s3.amazonaws.com
+  Since this maps to a real DNS hostname on the internet, no two buckets anywhere
+  in the world (across any account, any region) can share the same name.
+- Practical impact:
+    - If someone else has already taken a bucket name (e.g. "mydata"), you CANNOT use
+      it, even in a different region or different AWS account.
+    - Common practice for exam/real-world: add unique suffixes, e.g. "mycompany-app-logs-8213".
+- Note: this uniqueness rule applies to the bucket NAME itself, not to objects inside it.
+  Object keys only need to be unique WITHIN a bucket.
+
+========================================
+QUICK EXAM TIPS
+========================================
+- S3 is a flat structure internally — "folders" you see in console are just prefixes in the key name.
+- S3 is object storage, NOT a file system or block storage (that's EBS/EFS).
+- Data consistency: S3 provides strong read-after-write consistency for all operations (PUTS, GETS, DELETES).
+
+
+Yes, Amazon S3 (Simple Storage Service) is considered a serverless service.
+It is a fully managed object storage offering where you do not provision,
+configure, or manage any underlying servers or hard drives
+
+========================================
+AWS CLI: "s3" vs "s3api"
+========================================
+- aws s3: high-level convenience commands (cp, sync, mv, rm, ls) for everyday file/object transfers, with automatic multipart handling and recursive/glob support.
+- aws s3api: low-level commands that map 1:1 to the raw S3 REST API (put-object, list-objects-v2, create-bucket, put-bucket-policy, etc.), giving full control over request parameters (metadata, ACLs, encryption, versioning) but no built-in conveniences like sync.
+
+TL;DR: s3 = convenience wrapper for moving files; s3api = raw API access for fine-grained control/config.
+
+
+
+
 S3 CHEAT SHEET
 ==============
 
@@ -180,12 +285,111 @@ Server-side encryption (SSE) options - AWS encrypts/decrypts for you:
   - it doesn't silently turn errors into 200s.
 
 
-s3 object lock
+8. S3 STORAGE CLASSES
+------------------------
+ALL classes are rated 99.999999999% (11 nines) durability, including One
+Zone-IA and Express One Zone - durability is about not losing the bits
+(redundancy within whatever AZ footprint the class uses), which is
+different from AVAILABILITY (whether the object is reachable right now,
+e.g. during an AZ outage). Single-AZ classes (One Zone-IA, Express One
+Zone) still carry the 11-nines rating for the AZ they live in, but if that
+one AZ is destroyed the data really can be lost - that risk shows up in
+their lower AVAILABILITY %, not in a lower durability number.
 
-aws s3,
-aws s3api
-aws s3control
-aws s3outposts
+Comparison table (from course slide):
+
+                    Express-1Z Standard  Int-Tier  Std-IA   1Zone-IA Glacier-Instant Glacier-Flex  Glacier-Deep
+Durability          11 9's     11 9's    11 9's    11 9's   11 9's   11 9's          11 9's        11 9's
+Availability        99.95%     99.99%    99.9%     99.9%    99.5%    99.9%           N/A           N/A
+Availability SLA    99.9%      99.99%    99%       99%      99%      99%             N/A           N/A
+AZs                 1          >=3       >=3       >=3      1        >=3             >=3           >=3
+Min charge/object   N/A        N/A       N/A       128 KB   128 KB   (n/a listed)    40 KB         40 KB
+Min storage duration N/A       N/A       30 days   30 days  30 days  90 days         90 days       180 days
+Retrieval fee       N/A        N/A       N/A       per GB   per GB   per GB          per GB        per GB
+First-byte latency  single-digit ms  ms  ms        ms       ms       ms              mins-hrs      hours
+
+Note: Glacier Flexible/Deep Archive don't publish an availability SLA
+because they're retrieval-based, not always-on - "availability" isn't
+really a meaningful number until you've paid the restore time.
+
+- S3 Standard:
+  - Default class. Milliseconds first-byte latency, resilient across >=3 AZs.
+  - 99.99% availability SLA. Highest storage cost of the "always-ready"
+    tiers, no retrieval fee, no minimum storage duration.
+  - Use for: frequently accessed / active data (websites, apps, analytics
+    feeding live workloads).
+
+- S3 Intelligent-Tiering:
+  - No retrieval fees, no performance impact - it auto-moves objects
+    between access tiers based on observed access patterns, for a small
+    monthly per-object monitoring/automation fee.
+  - Tiers (low to high latency): Frequent Access -> Infrequent Access (after
+    30 days no access) -> Archive Instant Access (after 90 days) ->
+    optional Archive Access (after 90-700+ days, opt-in) -> optional Deep
+    Archive Access (after 180-700+ days, opt-in). The two archive tiers
+    behave like Glacier Flexible/Deep Archive (need a restore request).
+  - Use for: unknown or changing access patterns where you don't want to
+    manage lifecycle rules by hand.
+
+- S3 Standard-IA (Infrequent Access):
+  - Millisecond access like Standard, but lower storage price / higher
+    per-GB retrieval price. 99.9% availability.
+  - Minimum storage duration: 30 days. Minimum billable object size: 128 KB
+    (smaller objects still billed as if 128 KB).
+  - Use for: backups, older data still occasionally needed, e.g. DR
+    secondary copies.
+
+- S3 One Zone-IA:
+  - Same as Standard-IA but stored in a SINGLE AZ instead of >=3.
+  - Cheaper than Standard-IA (~20% less), still rated 11 nines durability
+    within that AZ, but only 99.5% availability - lose the AZ and you lose
+    the data, which is why it's positioned below Standard-IA.
+  - Same 30-day minimum duration / 128 KB minimum billable size as
+    Standard-IA.
+  - Use for: easily recreatable data, or secondary copies you already
+    replicate elsewhere (e.g. on-prem backup copy).
+
+- S3 Glacier Instant Retrieval:
+  - Archive tier but with millisecond retrieval (same latency as Standard),
+    for data accessed roughly once a quarter.
+  - Minimum storage duration: 90 days. 99.9% availability.
+  - Cheapest storage cost that still gives instant access.
+
+- S3 Glacier Flexible Retrieval (formerly just "S3 Glacier"):
+  - Data NOT instantly available - you submit a restore request first, then
+    the object copy becomes available for a set time.
+  - Retrieval speed options: Expedited (1-5 min), Standard (3-5 hrs), Bulk
+    (5-12 hrs, cheapest/free-tier-eligible for bulk restores).
+  - Minimum storage duration: 90 days. Minimum billable object size: 40 KB.
+  - Use for: backups/archives accessed a few times a year, DR data.
+
+- S3 Glacier Deep Archive:
+  - Cheapest storage class overall. Restore options: Standard (12 hrs) or
+    Bulk (48 hrs).
+  - Minimum storage duration: 180 days. Minimum billable object size: 40 KB.
+  - Use for: long-term retention / compliance archives (7-10 year
+    regulatory retention, rarely-if-ever accessed).
+
+- S3 Express One Zone:
+  - The fastest class - single-digit millisecond latency, up to 10x faster
+    than S3 Standard, purpose-built for latency-sensitive/high-request-rate
+    workloads (e.g. ML training data, ad tech bidding).
+  - ONLY usable with directory buckets (see section 3), single AZ.
+  - Priced higher per-GB than Standard but can cut request costs since data
+    is colocated with compute; no minimum storage duration.
+
+- (Legacy) Reduced Redundancy Storage (RRS): deprecated, AWS no longer
+  recommends it - Standard is now equally cheap/cheaper with better
+  durability, so there's no reason to use RRS today.
+
+Lifecycle rules tie all of this together: you set transition actions (e.g.
+Standard -> Standard-IA after 30 days -> Glacier Deep Archive after 180
+days) and expiration actions, instead of moving objects manually. Note the
+minimum-duration classes (IA/Glacier tiers) charge an early-deletion
+penalty if you delete/transition out before their minimum, so lifecycle
+rules that transition too aggressively can cost more than they save.
+
+
 
 
 https://zeroexceptions.s3.us-east-1.amazonaws.com/docs/all/myfiles/s3.txt
