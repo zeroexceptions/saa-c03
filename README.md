@@ -29,3 +29,7 @@ downloadable lecture slides and cheatsheets for enrolled learners:
 
 Use community notes to reinforce the course, but verify time-sensitive details
 against AWS documentation. Do not use exam dumps; focus on concepts and labs.
+
+
+mcqs
+https://github.com/Iamrushabhshahh/AWS-Certified-Solutions-Architect-Associate-SAA-C03-Exam-Dump-With-Solution/blob/main/README.md
