@@ -87,12 +87,84 @@ Transit Gateway (TGW) — out to a transit hub for connecting multiple VPCs and 
 
 
 
-## AWS direct connect
-## VPC endpoints
-## Interface Endpoints
-## Gateway Load balancers
-## vpc gateway endpoints
-## aws client vpn
+# What is a Gateway?
+
+A gateway (in the context of cloud services) is a networking service which
+**sits between two different networks**. Gateways often act as reverse
+proxies, firewalls, and load balancers.
+
+---
+
+## Networking Gateways
+
+### Internet Gateway
+Inbound and outbound public traffic for IPv4 and IPv6.
+
+### Egress-Only Internet Gateway
+Outbound private traffic for IPv6.
+
+### Carrier Gateway
+Connecting to AWS partnered telecom network.
+
+### NAT Gateway
+Outbound private traffic for IPv4.
+
+### Virtual Private Gateway
+The endpoint into your AWS account for a VPN connection.
+
+### Customer Gateway
+The endpoint into your on-premise account for a VPN connection.
+
+### Gateway Load Balancer (GWLB)
+Layer 3 (Network layer) load balancer to run and scale third-party virtual
+applications, e.g. Firewalls, IDS/IPS.
+
+---
+
+## Connectivity & Service Gateways
+
+### Direct Connect Gateway
+The endpoint connection to a fiber optic connection at a co-location data
+center.
+
+### AWS Backup Gateway
+The endpoint connection for AWS managed backups.
+
+### IoT Device Gateway
+The endpoint connection to send IoT data in both directions.
+
+### AWS Transit Gateway
+Hub and spoke model to simplify VPC peering.
+
+### Amazon API Gateway
+Abstracts API endpoints to services.
+
+### AWS Storage Gateway
+Syncing, caching, or extending local storage to cloud storage.
+
+
+
+### AWS direct connect
+### VPC endpoints
+### Interface Endpoints
+### Gateway Load balancers
+### vpc gateway endpoints
+### aws client vpn
+### aws private link
+### interface endpoint vs gateway endpoint vs gateway load balancer endpoint
+### vpc flow logs
+### Virtual Private Network
+### aws site to site vpn
+### nat gateway
+### vpc lattice
+### Network Address Usage
+
+
+
+
+
+
+
 
 
 
