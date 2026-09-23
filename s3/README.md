@@ -21,63 +21,7 @@ bucket policy vs IAM policy
 s3 access grants
 iam access analyzer
 Internetwork traffic privacy
-(Cross-Origin Resource Sharing)
-Security - CORS
-8:19:34 S3 - Security - CORS Follow Along
-9:06:51 S3 - Security - Encryption Overview
-9:07:59 S3 - Security - Encryption - In-Transit
-9:09:46 S3 - Security - Encryption - Server-Side Encryption
-9:11:19 S3 - Security - Encryption - Server-Side Encryption - SSE-S3
-9:12:48 S3 - Security - Encryption - Server-Side Encryption - SSE-KMS
-9:14:44 S3 - Security - Encryption - Server-Side Encryption - SSE-C
-9:16:39 S3 - Security - Encryption - Server-Side Encryption - DSSE-KMS
-9:19:23 S3 - Security - Encryption - Server-Side Encryption Follow Along
-9:56:37 S3 - Security - Encryption - Bucket Key
-9:59:16 S3 - Security - Encryption - Client-Side Encryption
-10:00:58 S3 - Security - Encryption - Client-Side Encryption Follow Along
-10:12:10 S3 - Data Consistency
-10:13:54 S3 - Object Replication
-10:15:15 S3 - Versioning
-10:16:32 S3 - Object Lifecycle
-10:18:19 S3 - Transfer Acceleration
-10:19:47 S3 - Presigned URL
-10:20:34 S3 - Presigned URL - Anatomy
-10:21:22 S3 - Access Points (smaller Bucket Policy)
-10:22:47 S3 - Multi-Region Access Points
-10:24:10 S3 - Object Lambda Access Points
-10:25:45 S3 - Mountpoint (Linux file system)
-10:27:48 S3 - Archived Objects
-10:29:50 S3 - Requesters Pay
-10:31:24 S3 - Requesters Pay - Header
-10:32:11 S3 - Requesters Pay - Troubleshooting
-10:33:12 AWS Marketplace for S3
-10:35:30 S3 - Batch Operations
-10:36:33 Amazon S3 Inventory
-10:37:30 S3 - Select
-10:39:27 S3 - Event Notifications
-10:40:58 S3 Storage Class Analysis
-10:42:30 S3 Storage Lens
-10:43:31 S3 - Static Website Hosting
-10:45:23 S3 - Multipart Upload
-10:47:44 S3 - Multipart Download (Byte Range Fetching)
-10:49:44 S3 Interoperability
-10:51:45 AWS API
-10:55:16 AWS CLI
-10:58:39 Access Keys
-11:03:15 API Retries and Exponential Backoff
-11:05:05 Smithy (AWS open-source IDL -> Service Model)
-11:06:22 STS (Security Token Service)
-11:08:41 STS AssumeRole Follow Along
-11:54:12 Signing AS API Requests
-11:56:02 AWS Signature Version 4
-11:58:01 AWS Service IP Address Ranges
-11:59:12 Service Endpoints
-12:01:58 AWS CLI - accepting input from file CLI Input Flag (--cli-input-json|yaml)
-12:02:49 Configuration Files (~/.aws/credentials|config)
-12:04:40 AWS CLI - Named Profiles
-12:06:10 AWS CLI - Configure Commands / SSO
-12:08:02 AWS CLI - Environment Variables
-12:11:15 AWS CLI - Autoprompt/Autocompletion
+
 
 ============================
 
