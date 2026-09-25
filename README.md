@@ -33,3 +33,7 @@ against AWS documentation. Do not use exam dumps; focus on concepts and labs.
 
 mcqs
 https://github.com/Iamrushabhshahh/AWS-Certified-Solutions-Architect-Associate-SAA-C03-Exam-Dump-With-Solution/blob/main/README.md
+
+
+course domains:
+https://docs.aws.amazon.com/pdfs/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.pdf

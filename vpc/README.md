@@ -165,59 +165,48 @@ Syncing, caching, or extending local storage to cloud storage.
 
 
 
+All important gateways
 
-
-
-### List of topics
-
-12:19:34 VPC
-12:21:36 Core Components of VPC
-12:24:09 Key Features of VPC
-12:26:09 VPC Follow Along
-13:41:24 Default VPC
-13:44:15 Deleting VPC
-13:45:05 Default Route (Catch-All-Route) 0.0.0.0/0 ::/0
-13:46:41 Delete & Recreate Default VPC Follow Along
-13:48:30 Shared VPC via RAM (sharing subnet)
-13:50:05 Shared VPC Follow Along
-14:09:06 NACLs
-14:12:28 NACL Follow Along
-15:10:40 Security Groups
-15:15:40 Security Groups Follow Along
-15:24:02 Stateless vs Stateful
-15:28:36 Route Tables
-15:35:28 Route Tables Follow Along
-15:37:58 Gateways
-15:42:57 IGW (Internet Gateway)
-15:44:29 IGW Follow Along
-15:47:12 EO-IGW (Egress-Only Internet Gateway)
-15:48:26 EO-IGW Follow Along
-16:07:47 EIP (Elastic IPs)
-16:13:17 EIP Follow Along
-16:18:40 AWS IPv6 Support
-16:19:51 Migrating from IPv4 to IPv6
-16:21:11 Direct Connect
-16:27:12 VPC Endpoints
-16:28:48 Private Link
-16:31:48 Interface Endpoints (powered via PrivateLink)
-16:33:34 GWLB (Gateway Load Balancer) Endpoint (powered via PrivateLink)
-16:35:09 VPC Gateway Endpoints (private to S3 & DynamoDB)
-16:36:09 VPC Endpoints Comparison
-16:38:56 VPC Flow Logs
-16:40:51 AWS VPN (Virtual Private Network)
-16:42:01 AWS Site-to-Site VPN
-16:46:07 VGW (Virtual Private Gateway)
-16:47:32 Customer Gateway
-16:49:59 TGW (Transit Gateway)
-16:50:56 AWS Client VPN
-16:53:14 NAT (Network Address Translation)
-16:54:50 NAT Gateway
-16:58:25 NAT Instances
-17:00:07 Jumpbox/Bastion host
-17:02:37 VPC Lattice
-17:06:07 TGW (Transit Gateway) More Detail
-17:09:07 Traffic Mirroring
-17:10:10 AWS Network Firewall
-17:11:33 VPC Peering
-17:14:16 VPC Peering Follow Along
-17:30:26 Network Address Usage
+### What is a Gateway?
+A gateway is a networking service that sits between two different networks — often acting as a reverse proxy, firewall, or load balancer.
+ 
+---
+ 
+### Internet Gateway
+Inbound and outbound public traffic for IPv4 and IPv6.
+ 
+### Egress-Only Internet Gateway
+Outbound-only private traffic for IPv6.
+ 
+### Carrier Gateway
+Connects to an AWS-partnered telecom network.
+ 
+### NAT Gateway
+Outbound-only private traffic for IPv4.
+ 
+### Virtual Private Gateway
+The endpoint into your AWS account for a VPN connection.
+ 
+### Customer Gateway
+The endpoint into your on-premises network for a VPN connection.
+ 
+### Gateway Load Balancer (GWLB)
+A Layer 3 (network layer) load balancer used to run and scale third-party virtual appliances (e.g., firewalls, IDS/IPS).
+ 
+### Direct Connect Gateway
+The endpoint connection to a fiber optic connection at a co-location data center.
+ 
+### AWS Backup Gateway
+The endpoint connection for AWS-managed backups.
+ 
+### IoT Device Gateway
+The endpoint connection to send IoT data in both directions.
+ 
+### AWS Transit Gateway
+A hub-and-spoke model that simplifies VPC peering.
+ 
+### Amazon API Gateway
+Abstracts API endpoints to backend services.
+ 
+### AWS Storage Gateway
+Syncs, caches, or extends local storage to cloud storage.
