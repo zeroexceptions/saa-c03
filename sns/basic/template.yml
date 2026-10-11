@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: SNS topic + Lambda (subscription left for console practice)
+
+Resources:
+  SNSTopic:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sns-topic.html
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: sns-basic-practice
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  Lambda:
+    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: sns-basic-practice
+      Runtime: python3.12
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          def handler(event, context):
+              message_str = event['Records'][0]['Sns']['Message']
+              m = json.loads(message_str)
+              message = 'Hello {} {}!'.format(m['first_name'], m['last_name'])
+              print(message)
+              return
+
+Outputs:
+  TopicArn:
+    Description: SNS topic ARN (use when publishing)
+    Value: !Ref SNSTopic
+  FunctionName:
+    Description: Lambda function name
+    Value: !Ref Lambda
