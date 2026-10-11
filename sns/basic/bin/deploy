@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+
+root_path="$(cd "$(dirname "$0")/.." && pwd)"
+template_path="${root_path}/template.yml"
+
+aws cloudformation deploy \
+  --region us-east-1 \
+  --template-file "${template_path}" \
+  --stack-name sns-basic-practice \
+  --capabilities CAPABILITY_IAM

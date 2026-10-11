@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Replace with your topic ARN from CloudFormation Outputs or SNS console
+TOPIC_ARN="arn:aws:sns:us-east-1:546208175646:sns-basic-practice-SNSTopic-8SogBw1xLqyH"
+
+aws sns publish \
+  --region us-east-1 \
+  --topic-arn "$TOPIC_ARN" \
+  --message '{ "first_name": "Farooq Haider", "last_name": "Alvi" }'
