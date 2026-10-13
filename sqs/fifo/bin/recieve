@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+echo "== receieve"
+
+root_path=$(realpath .)
+
+QUEUE_URL=https://sqs.us-east-1.amazonaws.com/546208175646/sqs-fifo-MyQueue-OYkslKv7UyoK.fifo
+
+aws sqs receive-message \
+--queue-url $QUEUE_URL \
+--attribute-names All \
+--message-attribute-names All  \
+--max-number-of-messages 10

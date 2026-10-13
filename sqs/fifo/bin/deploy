@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+echo "== deploy SQS Standard"
+
+STACK_NAME="sqs-fifo"
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(dirname "$script_dir")"
+template_path="${project_dir}/template.yaml"
+
+# https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cloudformation/deploy/index.html
+aws cloudformation deploy \
+--template-file $template_path \
+--capabilities CAPABILITY_NAMED_IAM \
+--no-execute-changeset \
+--region us-east-1 \
+--stack-name $STACK_NAME

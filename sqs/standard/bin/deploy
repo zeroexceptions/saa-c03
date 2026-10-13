@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+echo "== deploy SQS Standard"
+
+STACK_NAME="sqs-standard"
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+project_dir="$(dirname "$script_dir")"
+template_path="${project_dir}/template.yaml"
+
+aws cloudformation deploy \
+  --template-file "$template_path" \
+  --no-execute-changeset \
+  --region us-east-1 \
+  --stack-name "$STACK_NAME"
