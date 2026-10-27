@@ -1,0 +1,72 @@
+# Ignore bundler config
+/.bundle
+
+# Ignore all environment files (except templates)
+/.env*
+!/.env*.erb
+!/.env.example
+
+# Ignore all logfiles and tempfiles
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+
+# Ignore pidfiles, but keep the directory
+/tmp/pids/*
+!/tmp/pids/
+!/tmp/pids/.keep
+
+# Ignore storage (uploaded files in development and any SQLite databases)
+/storage/*
+!/storage/.keep
+/tmp/storage/*
+!/tmp/storage/
+!/tmp/storage/.keep
+
+# Local SQLite databases
+/db/*.sqlite3
+/db/*.sqlite3-*
+
+# Ignore assets
+/public/assets
+/public/packs
+/public/packs-test
+/public/uploads
+
+# Ignore master key and credentials for decrypting credentials
+/config/master.key
+/config/credentials/*.key
+
+# Ignore local database config (if you keep credentials there)
+/config/database.yml.local
+
+# Node / JS
+/node_modules
+/yarn-error.log
+yarn-debug.log*
+.yarn-integrity
+/app/assets/builds/*
+!/app/assets/builds/.keep
+
+# Test coverage and reports
+/coverage
+/spec/examples.txt
+
+# Vendor / gems
+/vendor/bundle
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Misc
+.byebug_history
+.rspec_status
+*.log
+dump.rdb
