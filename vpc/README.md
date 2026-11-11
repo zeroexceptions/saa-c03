@@ -210,3 +210,16 @@ Abstracts API endpoints to backend services.
  
 ### AWS Storage Gateway
 Syncs, caches, or extends local storage to cloud storage.
+
+
+### An instance can belong to multiple security groups.
+### and sg reules are permissivie, if one deny and other allow then allow wins.
+
+
+### Every EC2 instance can access its own metadata through a special IP address:
+
+
+a vpc endpoint has 3 types
+interface endpoints (for other services)
+gateway endpoints (for s3 and dynamodb)
+gateway load balancers endpoints (firewalls, intrusion detection, deep packet inspection)
