@@ -177,6 +177,9 @@
 19:09:11 IAM Cross Account Roles
 19:10:33 IAM AssumeRoleWithWebIdentity
 19:12:23 AWS SSO (Sign-Sign-On)
+
+
+
 19:13:41 EC2
 19:15:29 Cloud Init
 19:17:22 Cloud Init Follow Along
