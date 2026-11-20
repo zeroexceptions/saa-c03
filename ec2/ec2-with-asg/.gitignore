@@ -1,0 +1,18 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+
+# Rails generated files
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+
+# SQLite files are not used when PostgreSQL is configured
+/db/*.sqlite3
+
+# Bundled dependencies
+/vendor/bundle

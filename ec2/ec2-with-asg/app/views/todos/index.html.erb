@@ -1,0 +1,75 @@
+<div class="page-shell">
+  <header class="topbar">
+    <a class="brand" href="<%= root_path %>"><span class="brand-mark">✓</span> daymark</a>
+    <div class="top-note"><span class="live-dot"></span> Your space to get things done</div>
+  </header>
+
+  <% if notice %><div class="flash"><%= notice %></div><% end %>
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">A clearer kind of to-do list</div>
+      <h1>Make room for<br><em>what matters.</em></h1>
+      <p class="hero-copy">Big plans start with small steps. Get it out of your head and into your day.</p>
+    </div>
+    <% total = @active_count + @completed_count %>
+    <% progress = total.zero? ? 0 : (@completed_count.to_f / total * 100).round %>
+    <div class="progress-card">
+      <div class="progress-top"><span class="progress-label">Today's progress</span><span class="progress-number"><%= progress %>%</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width: <%= progress %>%"></div></div>
+      <div class="progress-foot"><span><%= @completed_count %> completed</span><span><%= @active_count %> left to go</span></div>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <aside class="form-panel">
+      <div class="panel-heading"><div><h2>Add a task</h2><p>One step at a time.</p></div><span class="spark">✳</span></div>
+      <%= form_with model: @todo, url: todos_path do |form| %>
+        <% if @todo.errors.any? %><div class="errors"><%= @todo.errors.full_messages.to_sentence %></div><% end %>
+        <div class="field"><%= form.label :title, "What needs doing?" %><%= form.text_field :title, placeholder: "e.g. Plan this week's meals", maxlength: 120, autofocus: true %></div>
+        <div class="field"><%= form.label :details, "A few details · optional" %><%= form.text_area :details, placeholder: "Add a note or break it into steps..." %></div>
+        <div class="field"><%= form.label :due_date, "When · optional" %><%= form.date_field :due_date %></div>
+        <%= form.button class: "primary-button" do %>＋ &nbsp; Add to my list<% end %>
+      <% end %>
+    </aside>
+
+    <section class="tasks-section">
+      <%= turbo_frame_tag "todos_list" do %>
+        <div class="list-heading">
+          <h2>Your tasks <span class="count-pill"><%= @todos.size %></span></h2>
+          <nav class="filters" aria-label="Filter tasks">
+            <% { "all" => "Everything", "active" => "In progress", "completed" => "Done" }.each do |key, label| %>
+              <%= link_to label, root_path(filter: key), class: (@filter == key ? "active" : ""), data: { turbo_action: "advance" } %>
+            <% end %>
+          </nav>
+        </div>
+        <% if @todos.any? %>
+          <div class="todo-list">
+            <% @todos.each_with_index do |todo, index| %>
+            <article class="todo-card <%= 'done' if todo.completed? %>" style="animation-delay:<%= [index * 45, 300].min %>ms">
+              <%= button_to toggle_todo_path(todo), method: :patch, class: "check-button #{'checked' if todo.completed?}", aria: { label: todo.completed? ? "Mark #{todo.title} incomplete" : "Complete #{todo.title}" } do %>
+                <% if todo.completed? %><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 8 3 3 7-7"/></svg><% end %>
+              <% end %>
+              <div>
+                <h3 class="todo-title"><%= todo.title %></h3>
+                <% if todo.details.present? %><p class="todo-details"><%= todo.details %></p><% end %>
+                <% if todo.due_date.present? %>
+                  <% late = !todo.completed? && todo.due_date < Date.current %>
+                  <div class="todo-meta"><span class="due-date <%= 'overdue' if late %>"><%= late ? "Overdue · " : "Due · " %><%= todo.due_date.strftime("%b %-d") %></span></div>
+                <% end %>
+              </div>
+              <div class="row-actions">
+                <%= link_to edit_todo_path(todo), class: "icon-action", aria: { label: "Edit #{todo.title}" }, data: { turbo_frame: "_top" } do %><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m12.5 4.5 3 3M4 16l3.4-.7 8.8-8.8a1.4 1.4 0 0 0-2-2l-8.8 8.8L4 16Z"/></svg><% end %>
+                <%= button_to todo_path(todo), method: :delete, class: "icon-action delete", aria: { label: "Delete #{todo.title}" }, form: { data: { turbo_confirm: "Delete this task?" } } do %><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6h12M8 6V4h4v2m2 0-.7 10H6.7L6 6m2.5 3v4m3-4v4"/></svg><% end %>
+              </div>
+            </article>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="empty-state"><div class="empty-icon"><%= @filter == "completed" ? "✳" : "↗" %></div><h3><%= @filter == "completed" ? "Nothing checked off yet" : (@filter == "active" ? "You're all caught up" : "A fresh page") %></h3><p><%= @filter == "completed" ? "Complete a task and it will show up here." : (@filter == "active" ? "Enjoy the breathing room. Add a task whenever you're ready." : "Add your first task and start building momentum.") %></p></div>
+        <% end %>
+        <div class="frame-loader" role="status" aria-live="polite"><span class="loading-spinner"></span><span>Loading tasks…</span></div>
+      <% end %>
+    </section>
+  </main>
+</div>

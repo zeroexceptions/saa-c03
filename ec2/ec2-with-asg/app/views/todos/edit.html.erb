@@ -1,0 +1,16 @@
+<div class="edit-wrap">
+  <%= link_to "← Back to your list", root_path, class: "back-link" %>
+  <div class="eyebrow">A small adjustment</div>
+  <h1>Edit your task</h1>
+  <p>Plans change. Make this one work for you.</p>
+  <% if notice %><div class="flash"><%= notice %></div><% end %>
+  <section class="form-panel">
+    <%= form_with model: @todo do |form| %>
+      <% if @todo.errors.any? %><div class="errors"><%= @todo.errors.full_messages.to_sentence %></div><% end %>
+      <div class="field"><%= form.label :title, "Task" %><%= form.text_field :title, maxlength: 120, autofocus: true %></div>
+      <div class="field"><%= form.label :details, "A few details · optional" %><%= form.text_area :details %></div>
+      <div class="field"><%= form.label :due_date, "When · optional" %><%= form.date_field :due_date %></div>
+      <div class="edit-actions"><%= form.submit "Save changes", class: "primary-button" %><%= link_to "Cancel", root_path %></div>
+    <% end %>
+  </section>
+</div>
