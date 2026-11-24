@@ -1,3 +1,5 @@
+//  command to run this file 
+// docker run --rm -i grafana/k6:latest run - < load-test.js
 
 import http from 'k6/http';
 import { check } from 'k6';
@@ -14,10 +16,10 @@ const postFailed = new Counter('post_requests_failed');
 
 export const options = {
   stages: [
+    { duration: '10s', target: 10 },
+    { duration: '3m', target: 100 },
     { duration: '10s', target: 1000 },
-    { duration: '3m', target: 1000 },
-    { duration: '10s', target: 5000 },
-    { duration: '5m', target: 5000 },
+    { duration: '5m', target: 2000 },
     { duration: '10s', target: 0 },
   ],
   thresholds: {
@@ -26,7 +28,7 @@ export const options = {
 };
 
 const BASE_URL =
-  'http://web-scaling-1-1968462550.us-east-1.elb.amazonaws.com';
+  'http://web-scaling-1-1968462550.us-east-1.elb.amazonaws.com/';
 
 export default function () {
   // GET homepage
@@ -94,3 +96,4 @@ export default function () {
     postFailed.add(1);
   }
 }
+
