@@ -36,7 +36,7 @@
     <section class="tasks-section">
       <%= turbo_frame_tag "todos_list" do %>
         <div class="list-heading">
-          <h2>Your tasks <span class="count-pill"><%= @todos.size %></span></h2>
+          <h2>Your tasks <span class="count-pill"><%= @todos.size %> on this page</span></h2>
           <nav class="filters" aria-label="Filter tasks">
             <% { "all" => "Everything", "active" => "In progress", "completed" => "Done" }.each do |key, label| %>
               <%= link_to label, root_path(filter: key), class: (@filter == key ? "active" : ""), data: { turbo_action: "advance" } %>
@@ -68,6 +68,15 @@
         <% else %>
           <div class="empty-state"><div class="empty-icon"><%= @filter == "completed" ? "✳" : "↗" %></div><h3><%= @filter == "completed" ? "Nothing checked off yet" : (@filter == "active" ? "You're all caught up" : "A fresh page") %></h3><p><%= @filter == "completed" ? "Complete a task and it will show up here." : (@filter == "active" ? "Enjoy the breathing room. Add a task whenever you're ready." : "Add your first task and start building momentum.") %></p></div>
         <% end %>
+        <nav class="pagination" aria-label="Task pages">
+          <% if @page > 1 %>
+            <%= link_to "← Previous", root_path(filter: @filter, page: @page - 1), data: { turbo_action: "advance" } %>
+          <% end %>
+          <span>Page <%= @page %></span>
+          <% if @has_next_page %>
+            <%= link_to "Next →", root_path(filter: @filter, page: @page + 1), data: { turbo_action: "advance" } %>
+          <% end %>
+        </nav>
         <div class="frame-loader" role="status" aria-live="polite"><span class="loading-spinner"></span><span>Loading tasks…</span></div>
       <% end %>
     </section>

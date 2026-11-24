@@ -88,6 +88,35 @@ The startup script currently names an image tag. For a release tagged `v2`:
 
 The Docker entrypoint runs `bin/rails db:prepare` before starting the Rails server. On first boot this prepares the RDS schema; on later boots it checks the existing database.
 
+## Database load improvements
+
+The homepage now displays 50 tasks per page, fetching at most 51 records to
+detect the next page without an additional total-count query. The same limit
+applies when redisplaying an invalid task submission. Filters are preserved
+between pages, and the ID is a final sort key so tied timestamps have a stable
+order. Numbered pages use offsets; very deep browsing still has increasing
+database cost and may eventually warrant cursor pagination.
+
+Production caches only the dashboard's grouped counts in each Puma process
+for 10 seconds (with a 2-second expiry race allowance). Counts can briefly lag
+behind writes or differ across instances; task rows are not cached. No Redis
+or new secrets are required. Cold processes still run the aggregate query.
+
+Migration `20261124130000` adds a PostgreSQL index matching the list ordering:
+`completed ASC, due_date ASC, created_at DESC, id DESC`. It is built concurrently
+to allow writes during creation. Existing indexes are preserved.
+
+To deploy these changes, build and push a new image tag, run `bin/rails db:migrate`
+once using that image and the existing production environment, then update the
+launch template's image and refresh the ASG. Verify that the migration completed
+before refreshing instances. The current container entrypoint also runs
+`db:prepare`, but running the migration once first avoids multiple booting
+instances attempting the index migration together.
+
+After deployment, test small loads first and compare RDS load, query latency,
+and homepage p95 with the previous version. These changes bound homepage row
+loading; they do not establish the database's maximum write throughput.
+
 ## Run locally
 
 PostgreSQL is the default adapter. Copy the sample environment file, set local database values, then prepare and start Rails:

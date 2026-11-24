@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_11_20_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_24_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -21,6 +21,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_11_20_120000) do
     t.date "due_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["completed", "due_date", "created_at", "id"], name: "index_todos_on_list_order", order: { created_at: :desc, id: :desc }
     t.index ["completed"], name: "index_todos_on_completed"
     t.index ["due_date"], name: "index_todos_on_due_date"
   end
