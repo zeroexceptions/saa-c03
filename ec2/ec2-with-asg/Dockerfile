@@ -42,8 +42,14 @@ FROM base
 
 # Install packages needed for deployment
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libpq5 libvips && \
+    apt-get install --no-install-recommends -y ca-certificates curl libpq5 libvips && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Public RDS CA bundle used to verify the database's TLS certificate.
+RUN mkdir -p /rails/config/certs && \
+    curl --fail --silent --show-error --location \
+      https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem \
+      --output /rails/config/certs/rds-global-bundle.pem
 
 # Copy built artifacts: gems, application
 COPY --from=build /usr/local/bundle /usr/local/bundle

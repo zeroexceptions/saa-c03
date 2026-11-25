@@ -11,6 +11,9 @@ gem "sprockets-rails"
 # PostgreSQL adapter for Active Record
 gem "pg", "~> 1.5"
 
+# Sign RDS database login tokens using the EC2 instance role.
+gem "aws-sdk-rds", "~> 1", require: false
+
 # Load local environment variables from .env in development and test.
 gem "dotenv-rails", groups: %i[development test]
 

@@ -1,3 +1,5 @@
+Monitoring study guide: [EC2 and RDS metrics for SAA-C03](ec2-rds-monitoring-README.md)
+
 AMI → "I want Ubuntu 22.04" (the OS/software)
 Instance type → "I want it to run on a t3.micro" (1 vCPU, 1GB RAM — the hardware)
 
