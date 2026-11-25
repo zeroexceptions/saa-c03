@@ -288,6 +288,70 @@ docker inspect daymark --format 'Status={{.State.Status}} ExitCode={{.State.Exit
 
 For table privilege behavior, see [PostgreSQL privileges](https://www.postgresql.org/docs/18/ddl-priv.html).
 
+### Optional same-Region read replica
+
+Production enables separate writer and reader pools when `PGREPLICAHOST` is
+nonempty. Without it, the app continues using only the primary. Keep the
+existing `PGHOST` pointing to `mydb` and add this key to `daymark/production`:
+
+```text
+PGREPLICAHOST=mydbreplica.cmv8swiq63ji.us-east-1.rds.amazonaws.com
+```
+
+Verify IAM database authentication is enabled on `mydbreplica` and its security
+group permits TCP 5432 from the EC2 app. The `daymark_iam` PostgreSQL role and
+its grants replicate from the primary; do not run CREATE USER on the read-only
+replica. Retrieve the replica's own Resource ID from your workstation:
+
+```bash
+aws rds describe-db-instances \
+  --db-instance-identifier mydbreplica --region us-east-1 \
+  --query 'DBInstances[0].{Endpoint:Endpoint.Address,ResourceID:DbiResourceId,IAM:IAMDatabaseAuthenticationEnabled,Status:DBInstanceStatus}' \
+  --output table
+```
+
+In `DaymarkRDSIAMConnect`, change `Resource` to an array containing the existing
+primary ARN plus
+`arn:aws:rds-db:us-east-1:546208175646:dbuser:REPLICA_RESOURCE_ID/daymark_iam`.
+Replace `REPLICA_RESOURCE_ID` with the full `db-...` value from that command.
+The IAM signer uses each connection's hostname, so tokens are signed separately
+for primary and replica. Both must be in `AWS_REGION` with this implementation.
+
+Rebuild and push the image using the deployment commands above. Ensure the EC2
+startup script passes `PGREPLICAHOST` from the secret into the container, then
+refresh the ASG instances to load the image and secret. A secret edit or Docker
+restart alone does not update the existing container's environment.
+
+Rails routes POST/PUT/PATCH/DELETE requests to the writer and GET/HEAD requests
+to the reader, except that reads from the same browser session use the writer
+for five seconds after a write. This delay does not measure replication lag;
+stale reads are possible. Existing dashboard counts are also cached for ten
+seconds. Background jobs and Rails runners use the writer unless they explicitly
+switch roles. Migrations run only against the primary. There is no automatic
+fallback to the writer if the replica is unavailable; removing `PGREPLICAHOST`
+and redeploying disables reader routing.
+
+On an updated EC2 host, verify actual database connections:
+
+```bash
+docker exec daymark ./bin/rails runner '
+  [:writing, :reading].each do |role|
+    ApplicationRecord.connected_to(role: role) do
+      connection = ApplicationRecord.connection
+      user = connection.select_value("SELECT current_user")
+      recovery = connection.select_value("SELECT pg_is_in_recovery()")
+      puts "#{role}: user=#{user}, recovery=#{recovery}"
+    end
+  end
+'
+```
+
+Expect `daymark_iam` for both roles, with `recovery=false` for writing and
+`recovery=true` for reading. Local configuration and signer checks do not
+establish deployed RDS connectivity; run this after deployment.
+
+See [Rails multiple database routing](https://guides.rubyonrails.org/v7.1/active_record_multiple_databases.html).
+
 ### Previous password-based deployment settings
 
 For reference, the earlier password-based deployment used these keys in

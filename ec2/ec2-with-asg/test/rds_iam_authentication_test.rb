@@ -81,6 +81,20 @@ class RdsIamAuthenticationTest < Minitest::Test
     assert_equal @params, @connections.first.first
   end
 
+  def test_each_endpoint_gets_its_own_iam_token
+    hosts = [@params.fetch(:host), "replica.us-east-1.rds.amazonaws.com"]
+    hosts.each do |host|
+      ActiveRecord::ConnectionAdapters::PostgreSQLAdapter.new_client(@params.merge(host: host))
+    end
+
+    @connections.zip(hosts).each do |(params, _connection), host|
+      assert_equal host, params.fetch(:host)
+      assert params.fetch(:password).start_with?("#{host}:5432/?")
+      assert_equal "verify-full", params.fetch(:sslmode)
+    end
+    refute_equal @connections.first.first[:password], @connections.last.first[:password]
+  end
+
   def test_missing_region_fails_before_connecting
     ENV.delete("AWS_REGION")
     assert_raises(KeyError) do

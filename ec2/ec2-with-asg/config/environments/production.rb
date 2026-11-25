@@ -1,6 +1,16 @@
 require "active_support/core_ext/integer/time"
 
 Rails.application.configure do
+  if ENV["PGREPLICAHOST"].present?
+    # Keep this browser's reads on the primary briefly after a write.
+    # This is a time window, not a measurement of replication lag.
+    config.active_record.database_selector = { delay: 5.seconds }
+    config.active_record.database_resolver =
+      ActiveRecord::Middleware::DatabaseSelector::Resolver
+    config.active_record.database_resolver_context =
+      ActiveRecord::Middleware::DatabaseSelector::Resolver::Session
+  end
+
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.

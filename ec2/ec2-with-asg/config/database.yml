@@ -16,5 +16,13 @@ test:
   database: <%= ENV.fetch("PGTESTDATABASE", "daymark_test") %>
 
 production:
-  <<: *default
-  database: <%= ENV.fetch("PGDATABASE", "daymark_production") %>
+  primary:
+    <<: *default
+    database: <%= ENV.fetch("PGDATABASE", "daymark_production") %>
+<% if ENV["PGREPLICAHOST"].present? %>
+  primary_replica:
+    <<: *default
+    host: <%= ENV.fetch("PGREPLICAHOST") %>
+    database: <%= ENV.fetch("PGDATABASE", "daymark_production") %>
+    replica: true
+<% end %>
