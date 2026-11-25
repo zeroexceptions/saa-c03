@@ -37,3 +37,6 @@ https://github.com/Iamrushabhshahh/AWS-Certified-Solutions-Architect-Associate-S
 
 course domains:
 https://docs.aws.amazon.com/pdfs/aws-certification/latest/solutions-architect-associate-03/solutions-architect-associate-03.pdf
+
+
+https://builder.aws.com/content/3Ld5b9Rhchbl0hiU4R0WjXdSvxY/amazon-rds-multi-az-vs-read-replicas-availability-or-performance
