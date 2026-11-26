@@ -1,4 +1,6 @@
 # Database Terminology: Instance, Node, Cluster
+
+For replication, availability, and application routing, see [RDS PostgreSQL vs Aurora PostgreSQL: readers, Multi-AZ, and endpoints](rds-vs-aurora-README.md).
  
 **Mental model:** `cluster → nodes → one instance per node (typically)`
  
