@@ -32,8 +32,10 @@ gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
-# Use Redis adapter to run Action Cable in production
-# gem "redis", ">= 4.0.1"
+# Shared Rails.cache on ElastiCache for Valkey or Redis OSS.
+gem "redis", "~> 5.3"
+# Rails 7.1 RedisCacheStore passes a positional options hash to ConnectionPool.
+gem "connection_pool", "~> 2.5"
 
 # Use Kredis to get higher-level data types in Redis [https://github.com/rails/kredis]
 # gem "kredis"

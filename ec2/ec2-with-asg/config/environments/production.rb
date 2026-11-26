@@ -77,9 +77,28 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # Cache only aggregate counts briefly; each Puma process has its own cache.
-  config.cache_store = :memory_store, { size: 16.megabytes }
+  # Share dashboard counts across Puma workers and ASG instances when configured.
+  # Connections are lazy so image builds do not need access to ElastiCache.
+  if ENV["REDIS_CACHE_URL"].present?
+    config.cache_store = :redis_cache_store, {
+      url: ENV.fetch("REDIS_CACHE_URL"),
+      username: ENV["REDIS_CACHE_USERNAME"].presence,
+      password: ENV["REDIS_CACHE_PASSWORD"].presence,
+      namespace: "daymark:production:cache",
+      connect_timeout: 1,
+      read_timeout: 1,
+      write_timeout: 1,
+      reconnect_attempts: 0,
+      pool: { size: Integer(ENV.fetch("RAILS_MAX_THREADS", "5")), timeout: 1 },
+      # Avoid logging connection strings or credentials from exception messages.
+      # Rails treats failed cache operations as misses and queries PostgreSQL.
+      error_handler: ->(method:, returning:, exception:) {
+        Rails.logger.warn("Rails cache #{method} failed (#{exception.class}); returned #{returning.inspect}")
+      }
+    }
+  else
+    config.cache_store = :memory_store, { size: 16.megabytes }
+  end
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter = :resque

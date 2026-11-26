@@ -417,10 +417,12 @@ between pages, and the ID is a final sort key so tied timestamps have a stable
 order. Numbered pages use offsets; very deep browsing still has increasing
 database cost and may eventually warrant cursor pagination.
 
-Production caches only the dashboard's grouped counts in each Puma process
-for 10 seconds (with a 2-second expiry race allowance). Counts can briefly lag
-behind writes or differ across instances; task rows are not cached. No Redis
-or new secrets are required. Cold processes still run the aggregate query.
+Production caches only the dashboard's grouped counts for 10 seconds (with a
+2-second expiry race allowance). With `REDIS_CACHE_URL`, the cache is shared
+across Puma workers and ASG instances; otherwise each process uses its own
+16 MB memory cache. Counts can briefly lag behind writes; task rows are not
+cached. Cache misses still run the aggregate query against the database selected
+by Rails, which can be the read replica and can itself lag.
 
 Migration `20261124130000` adds a PostgreSQL index matching the list ordering:
 `completed ASC, due_date ASC, created_at DESC, id DESC`. It is built concurrently
@@ -436,6 +438,102 @@ instances attempting the index migration together.
 After deployment, test small loads first and compare RDS load, query latency,
 and homepage p95 with the previous version. These changes bound homepage row
 loading; they do not establish the database's maximum write throughput.
+
+## Shared cache with ElastiCache
+
+The app supports ElastiCache for **Valkey or Redis OSS** through Rails'
+`redis_cache_store`. Aurora/PostgreSQL remains the source of truth. Setting the
+endpoint switches the existing dashboard count cache to ElastiCache without
+changing database routing or caching task rows. This does not automatically
+cache every SQL query or move sessions into ElastiCache.
+The Gemfile constrains `connection_pool` to version 2.x because Rails 7.1's
+cache adapter is incompatible with the version 3 initializer API.
+
+For a node-based cache, this configuration expects **cluster mode disabled**
+and uses its writable **primary endpoint**, which follows primary failover.
+Do not use a reader endpoint: Rails must write cache entries as well as read
+them. Memcached needs a different adapter. A node-based cluster with cluster
+mode enabled needs a cluster-aware client; do not point this configuration at
+its configuration endpoint. Confirm the deployment type before rollout.
+Serverless Valkey/Redis uses TLS and exposes a single virtual endpoint; use the
+writable endpoint on port 6379, and validate it with the checks below. The
+current dashboard uses single-key operations; adding multi-key operations to
+a sharded cache requires reviewing cross-slot behavior.
+
+### Network and authentication
+
+On the security group **attached to ElastiCache**, allow inbound TCP 6379
+from the **EC2 app security group**. A rule on Aurora's security group alone
+does not authorize EC2-to-ElastiCache traffic. EC2 also needs outbound access
+and VPC routing to the cache. Serverless also exposes port 6380 for its reader
+endpoint; this app uses the writable endpoint on 6379.
+
+Add these keys to `daymark/production`, preserving existing database settings:
+
+```text
+REDIS_CACHE_URL=rediss://YOUR_WRITABLE_CACHE_ENDPOINT:6379
+```
+
+Replace the placeholder with the ElastiCache DNS name. `rediss://` enables TLS
+with certificate verification using the image's system CA certificates; the
+RDS-specific CA setting does not configure Redis TLS. Use `redis://` only if
+your node-based cache has in-transit encryption disabled. Omit a database path
+so the client uses database 0.
+
+For password/AUTH-token or ACL authentication, also set the applicable keys:
+
+```text
+REDIS_CACHE_USERNAME=default
+REDIS_CACHE_PASSWORD=YOUR_CACHE_PASSWORD_OR_AUTH_TOKEN
+```
+
+Use the configured ACL username instead of `default` when applicable. Omit both
+keys for a cache that allows unauthenticated connections. Keep credentials
+separate from the URL so password characters do not need URL encoding.
+The existing `PG_AUTH_MODE=iam` and `rds-db:connect` policy apply only to the
+database. This cache configuration supports no-auth or password/ACL login;
+**ElastiCache IAM authentication is not implemented** and needs its own token
+generation and renewal logic if enabled on the cache.
+
+### Roll out and verify
+
+Build and push a new image using the commands above; this change adds the
+`redis` gem, so editing the secret alone is insufficient. Ensure the EC2 startup
+script forwards `REDIS_CACHE_URL` and any cache credential keys into Docker's
+environment file if it uses a whitelist. Refresh the ASG after the image push
+and secret update. Existing containers do not pick up secret edits through
+`docker restart`.
+
+On EC2, run these in succession to verify a value survives between two
+independent Rails processes (a memory store would not share the value):
+
+```bash
+sudo docker exec daymark ./bin/rails runner '
+  abort "Shared cache is not configured" unless Rails.cache.is_a?(ActiveSupport::Cache::RedisCacheStore)
+  abort "Cache write failed; check network, TLS and authentication" unless Rails.cache.write("deployment-cache-probe", "connected", expires_in: 2.minutes)
+  puts "ElastiCache write OK"
+'
+
+sudo docker exec daymark ./bin/rails runner '
+  abort "Shared cache is not configured" unless Rails.cache.is_a?(ActiveSupport::Cache::RedisCacheStore)
+  abort "Cache read failed" unless Rails.cache.read("deployment-cache-probe") == "connected"
+  Rails.cache.delete("deployment-cache-probe")
+  puts "ElastiCache shared read OK"
+'
+```
+
+Reload the homepage afterward to exercise the dashboard cache. Cache data uses
+the `daymark:production:cache` namespace. Connections have one-second timeouts
+and no reconnect retries on each operation. Redis connection failures are
+logged without connection strings or credentials; Rails treats them as cache
+misses and falls back to database queries. Successful startup, `/up`, and a
+successful homepage alone therefore do not prove ElastiCache is connected.
+Removing `REDIS_CACHE_URL` and recreating containers returns to per-process
+memory caching. No schema migration is required for this cache change.
+
+References: [Rails RedisCacheStore](https://api.rubyonrails.org/v7.1.5.2/classes/ActiveSupport/Cache/RedisCacheStore.html),
+[ElastiCache networking](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/set-up.html),
+and [ElastiCache connection troubleshooting](https://docs.aws.amazon.com/AmazonElastiCache/latest/dg/wwe-troubleshooting.html).
 
 ## Run locally
 
